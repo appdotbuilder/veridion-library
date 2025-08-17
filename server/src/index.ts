@@ -6,19 +6,17 @@ import superjson from 'superjson';
 
 // Import schemas
 import { 
-  createBookInputSchema, 
-  updateBookInputSchema,
-  getBooksBySectionInputSchema,
-  getBookByIdInputSchema 
+  createBlogPostInputSchema, 
+  updateBlogPostInputSchema, 
+  getBlogPostInputSchema 
 } from './schema';
 
 // Import handlers
-import { createBook } from './handlers/create_book';
-import { getAllBooks } from './handlers/get_all_books';
-import { getBooksBySection } from './handlers/get_books_by_section';
-import { getBookById } from './handlers/get_book_by_id';
-import { updateBook } from './handlers/update_book';
-import { deleteBook } from './handlers/delete_book';
+import { createBlogPost } from './handlers/create_blog_post';
+import { getBlogPosts } from './handlers/get_blog_posts';
+import { getBlogPost } from './handlers/get_blog_post';
+import { updateBlogPost } from './handlers/update_blog_post';
+import { deleteBlogPost } from './handlers/delete_blog_post';
 
 const t = initTRPC.create({
   transformer: superjson,
@@ -28,34 +26,29 @@ const publicProcedure = t.procedure;
 const router = t.router;
 
 const appRouter = router({
-  // Health check endpoint
   healthcheck: publicProcedure.query(() => {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }),
-
-  // Book management endpoints
-  createBook: publicProcedure
-    .input(createBookInputSchema)
-    .mutation(({ input }) => createBook(input)),
-
-  getAllBooks: publicProcedure
-    .query(() => getAllBooks()),
-
-  getBooksBySection: publicProcedure
-    .input(getBooksBySectionInputSchema)
-    .query(({ input }) => getBooksBySection(input)),
-
-  getBookById: publicProcedure
-    .input(getBookByIdInputSchema)
-    .query(({ input }) => getBookById(input)),
-
-  updateBook: publicProcedure
-    .input(updateBookInputSchema)
-    .mutation(({ input }) => updateBook(input)),
-
-  deleteBook: publicProcedure
-    .input(getBookByIdInputSchema)
-    .mutation(({ input }) => deleteBook(input)),
+  
+  // Blog post routes
+  createBlogPost: publicProcedure
+    .input(createBlogPostInputSchema)
+    .mutation(({ input }) => createBlogPost(input)),
+    
+  getBlogPosts: publicProcedure
+    .query(() => getBlogPosts()),
+    
+  getBlogPost: publicProcedure
+    .input(getBlogPostInputSchema)
+    .query(({ input }) => getBlogPost(input)),
+    
+  updateBlogPost: publicProcedure
+    .input(updateBlogPostInputSchema)
+    .mutation(({ input }) => updateBlogPost(input)),
+    
+  deleteBlogPost: publicProcedure
+    .input(getBlogPostInputSchema)
+    .mutation(({ input }) => deleteBlogPost(input)),
 });
 
 export type AppRouter = typeof appRouter;
@@ -72,7 +65,7 @@ async function start() {
     },
   });
   server.listen(port);
-  console.log(`The Veridion Library TRPC server listening at port: ${port}`);
+  console.log(`TRPC server listening at port: ${port}`);
 }
 
 start();
