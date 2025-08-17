@@ -1,9 +1,38 @@
+import { db } from '../db';
+import { blogPostsTable } from '../db/schema';
 import { type UpdateBlogPostInput, type BlogPost } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export const updateBlogPost = async (input: UpdateBlogPostInput): Promise<BlogPost | null> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is updating an existing blog post in the database.
-    // Returns null if the blog post is not found.
-    // Should update the updated_at timestamp when modifying the post.
-    return null;
+  try {
+    // Build the update object with only provided fields
+    const updateData: Record<string, any> = {
+      updated_at: new Date() // Always update the timestamp
+    };
+
+    if (input.title !== undefined) {
+      updateData['title'] = input.title;
+    }
+
+    if (input.content !== undefined) {
+      updateData['content'] = input.content;
+    }
+
+    // Update the blog post and return the updated record
+    const result = await db.update(blogPostsTable)
+      .set(updateData)
+      .where(eq(blogPostsTable.id, input.id))
+      .returning()
+      .execute();
+
+    // Return null if no record was updated (blog post not found)
+    if (result.length === 0) {
+      return null;
+    }
+
+    return result[0];
+  } catch (error) {
+    console.error('Blog post update failed:', error);
+    throw error;
+  }
 };

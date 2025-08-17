@@ -1,13 +1,23 @@
+import { db } from '../db';
+import { blogPostsTable } from '../db/schema';
 import { type CreateBlogPostInput, type BlogPost } from '../schema';
 
 export const createBlogPost = async (input: CreateBlogPostInput): Promise<BlogPost> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new blog post and persisting it in the database.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+  try {
+    // Insert blog post record
+    const result = await db.insert(blogPostsTable)
+      .values({
         title: input.title,
-        content: input.content,
-        created_at: new Date(), // Placeholder date
-        updated_at: new Date() // Placeholder date
-    } as BlogPost);
+        content: input.content
+      })
+      .returning()
+      .execute();
+
+    // Return the created blog post
+    const blogPost = result[0];
+    return blogPost;
+  } catch (error) {
+    console.error('Blog post creation failed:', error);
+    throw error;
+  }
 };

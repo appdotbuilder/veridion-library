@@ -3,22 +3,20 @@ import { createHTTPServer } from '@trpc/server/adapters/standalone';
 import 'dotenv/config';
 import cors from 'cors';
 import superjson from 'superjson';
-import { z } from 'zod';
 
 // Import schemas
 import { 
-  createItemInputSchema, 
-  updateItemInputSchema, 
-  getItemsQuerySchema 
+  createBlogPostInputSchema, 
+  updateBlogPostInputSchema, 
+  getBlogPostInputSchema 
 } from './schema';
 
 // Import handlers
-import { createItem } from './handlers/create_item';
-import { getItems } from './handlers/get_items';
-import { getItemById } from './handlers/get_item_by_id';
-import { updateItem } from './handlers/update_item';
-import { deleteItem } from './handlers/delete_item';
-import { fetchExternalItems, syncItemsFromExternal } from './handlers/fetch_external_items';
+import { createBlogPost } from './handlers/create_blog_post';
+import { getBlogPosts } from './handlers/get_blog_posts';
+import { getBlogPost } from './handlers/get_blog_post';
+import { updateBlogPost } from './handlers/update_blog_post';
+import { deleteBlogPost } from './handlers/delete_blog_post';
 
 const t = initTRPC.create({
   transformer: superjson,
@@ -28,45 +26,29 @@ const publicProcedure = t.procedure;
 const router = t.router;
 
 const appRouter = router({
-  // Health check endpoint
   healthcheck: publicProcedure.query(() => {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }),
-
-  // Create a new item
-  createItem: publicProcedure
-    .input(createItemInputSchema)
-    .mutation(({ input }) => createItem(input)),
-
-  // Get items with optional filtering and pagination
-  getItems: publicProcedure
-    .input(getItemsQuerySchema)
-    .query(({ input }) => getItems(input)),
-
-  // Get a single item by ID
-  getItemById: publicProcedure
-    .input(z.object({ id: z.number().int().positive() }))
-    .query(({ input }) => getItemById(input.id)),
-
-  // Update an existing item
-  updateItem: publicProcedure
-    .input(updateItemInputSchema)
-    .mutation(({ input }) => updateItem(input)),
-
-  // Delete an item by ID
-  deleteItem: publicProcedure
-    .input(z.object({ id: z.number().int().positive() }))
-    .mutation(({ input }) => deleteItem(input.id)),
-
-  // Fetch items from external source
-  fetchExternalItems: publicProcedure
-    .input(z.object({ sourceUrl: z.string().url() }))
-    .query(({ input }) => fetchExternalItems(input.sourceUrl)),
-
-  // Sync items from external source to database
-  syncItemsFromExternal: publicProcedure
-    .input(z.object({ sourceUrl: z.string().url() }))
-    .mutation(({ input }) => syncItemsFromExternal(input.sourceUrl)),
+  
+  // Blog post routes
+  createBlogPost: publicProcedure
+    .input(createBlogPostInputSchema)
+    .mutation(({ input }) => createBlogPost(input)),
+    
+  getBlogPosts: publicProcedure
+    .query(() => getBlogPosts()),
+    
+  getBlogPost: publicProcedure
+    .input(getBlogPostInputSchema)
+    .query(({ input }) => getBlogPost(input)),
+    
+  updateBlogPost: publicProcedure
+    .input(updateBlogPostInputSchema)
+    .mutation(({ input }) => updateBlogPost(input)),
+    
+  deleteBlogPost: publicProcedure
+    .input(getBlogPostInputSchema)
+    .mutation(({ input }) => deleteBlogPost(input)),
 });
 
 export type AppRouter = typeof appRouter;
