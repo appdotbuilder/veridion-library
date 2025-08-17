@@ -3,22 +3,22 @@ import { createHTTPServer } from '@trpc/server/adapters/standalone';
 import 'dotenv/config';
 import cors from 'cors';
 import superjson from 'superjson';
+import { z } from 'zod';
 
 // Import schemas
 import { 
-  createBookInputSchema, 
-  updateBookInputSchema,
-  getBooksBySectionInputSchema,
-  getBookByIdInputSchema 
+  createItemInputSchema, 
+  updateItemInputSchema, 
+  getItemsQuerySchema 
 } from './schema';
 
 // Import handlers
-import { createBook } from './handlers/create_book';
-import { getAllBooks } from './handlers/get_all_books';
-import { getBooksBySection } from './handlers/get_books_by_section';
-import { getBookById } from './handlers/get_book_by_id';
-import { updateBook } from './handlers/update_book';
-import { deleteBook } from './handlers/delete_book';
+import { createItem } from './handlers/create_item';
+import { getItems } from './handlers/get_items';
+import { getItemById } from './handlers/get_item_by_id';
+import { updateItem } from './handlers/update_item';
+import { deleteItem } from './handlers/delete_item';
+import { fetchExternalItems, syncItemsFromExternal } from './handlers/fetch_external_items';
 
 const t = initTRPC.create({
   transformer: superjson,
@@ -33,29 +33,40 @@ const appRouter = router({
     return { status: 'ok', timestamp: new Date().toISOString() };
   }),
 
-  // Book management endpoints
-  createBook: publicProcedure
-    .input(createBookInputSchema)
-    .mutation(({ input }) => createBook(input)),
+  // Create a new item
+  createItem: publicProcedure
+    .input(createItemInputSchema)
+    .mutation(({ input }) => createItem(input)),
 
-  getAllBooks: publicProcedure
-    .query(() => getAllBooks()),
+  // Get items with optional filtering and pagination
+  getItems: publicProcedure
+    .input(getItemsQuerySchema)
+    .query(({ input }) => getItems(input)),
 
-  getBooksBySection: publicProcedure
-    .input(getBooksBySectionInputSchema)
-    .query(({ input }) => getBooksBySection(input)),
+  // Get a single item by ID
+  getItemById: publicProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .query(({ input }) => getItemById(input.id)),
 
-  getBookById: publicProcedure
-    .input(getBookByIdInputSchema)
-    .query(({ input }) => getBookById(input)),
+  // Update an existing item
+  updateItem: publicProcedure
+    .input(updateItemInputSchema)
+    .mutation(({ input }) => updateItem(input)),
 
-  updateBook: publicProcedure
-    .input(updateBookInputSchema)
-    .mutation(({ input }) => updateBook(input)),
+  // Delete an item by ID
+  deleteItem: publicProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(({ input }) => deleteItem(input.id)),
 
-  deleteBook: publicProcedure
-    .input(getBookByIdInputSchema)
-    .mutation(({ input }) => deleteBook(input)),
+  // Fetch items from external source
+  fetchExternalItems: publicProcedure
+    .input(z.object({ sourceUrl: z.string().url() }))
+    .query(({ input }) => fetchExternalItems(input.sourceUrl)),
+
+  // Sync items from external source to database
+  syncItemsFromExternal: publicProcedure
+    .input(z.object({ sourceUrl: z.string().url() }))
+    .mutation(({ input }) => syncItemsFromExternal(input.sourceUrl)),
 });
 
 export type AppRouter = typeof appRouter;
@@ -72,7 +83,7 @@ async function start() {
     },
   });
   server.listen(port);
-  console.log(`The Veridion Library TRPC server listening at port: ${port}`);
+  console.log(`TRPC server listening at port: ${port}`);
 }
 
 start();

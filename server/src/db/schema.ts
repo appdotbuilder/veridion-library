@@ -1,25 +1,22 @@
-import { serial, text, pgTable, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { serial, text, pgTable, timestamp, numeric, integer, real } from 'drizzle-orm/pg-core';
 
-// Define the book section enum
-export const bookSectionEnum = pgEnum('book_section', ['mind_and_machine', 'veridion_writers_coop']);
-
-// Books table schema
-export const booksTable = pgTable('books', {
+export const itemsTable = pgTable('items', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
-  authors: text('authors').notNull(), // Comma-separated authors string
-  genre: text('genre').notNull(),
-  description: text('description').notNull(),
-  cover_image_url: text('cover_image_url'), // Nullable by default, matches Zod schema
-  content: text('content').notNull(), // Full book content
-  section: bookSectionEnum('section').notNull(), // Must be one of the enum values
+  description: text('description'), // Nullable by default
+  image_url: text('image_url'), // Nullable by default
+  category: text('category'), // Nullable by default
+  price: numeric('price', { precision: 10, scale: 2 }), // Nullable monetary value with precision
+  rating: real('rating'), // Nullable floating point for ratings (0-5)
+  external_id: text('external_id').notNull(), // ID from external source
+  source_url: text('source_url').notNull(), // URL of the external source
   created_at: timestamp('created_at').defaultNow().notNull(),
-  updated_at: timestamp('updated_at').defaultNow().notNull()
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // TypeScript types for the table schema
-export type Book = typeof booksTable.$inferSelect; // For SELECT operations
-export type NewBook = typeof booksTable.$inferInsert; // For INSERT operations
+export type Item = typeof itemsTable.$inferSelect; // For SELECT operations
+export type NewItem = typeof itemsTable.$inferInsert; // For INSERT operations
 
 // Important: Export all tables for proper query building
-export const tables = { books: booksTable };
+export const tables = { items: itemsTable };
